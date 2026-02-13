@@ -1,0 +1,79 @@
+services:
+  app:
+    image: ghcr.io/surtic86/sealshare:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - sealshare_storage:/app/storage/app
+      - sealshare_database:/app/database
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      APP_KEY: ${APP_KEY:?Set APP_KEY in .env or environment}
+      APP_URL: ${APP_URL:-http://localhost}
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      SERVER_NAME: ${SERVER_NAME:-localhost}
+      DB_CONNECTION: ${DB_CONNECTION:-sqlite}
+      DB_HOST: ${DB_HOST:-}
+      DB_PORT: ${DB_PORT:-}
+      DB_DATABASE: ${DB_DATABASE:-}
+      DB_USERNAME: ${DB_USERNAME:-}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      LOG_CHANNEL: ${LOG_CHANNEL:-stderr}
+      LOG_LEVEL: ${LOG_LEVEL:-warning}
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
+      CACHE_STORE: ${CACHE_STORE:-database}
+      OCTANE_HTTPS: ${OCTANE_HTTPS:-false}
+      OCTANE_MAX_EXECUTION_TIME: ${OCTANE_MAX_EXECUTION_TIME:-300}
+      PHP_UPLOAD_MAX_FILESIZE: ${PHP_UPLOAD_MAX_FILESIZE:-4G}
+      PHP_POST_MAX_SIZE: ${PHP_POST_MAX_SIZE:-4G}
+      PHP_MAX_EXECUTION_TIME: ${PHP_MAX_EXECUTION_TIME:-300}
+      PHP_MAX_INPUT_TIME: ${PHP_MAX_INPUT_TIME:-300}
+      PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-512M}
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost/up"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+  scheduler:
+    image: ghcr.io/surtic86/sealshare:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    entrypoint: ["php", "artisan", "schedule:work"]
+    volumes:
+      - sealshare_storage:/app/storage/app
+      - sealshare_database:/app/database
+    environment:
+      APP_KEY: ${APP_KEY:?Set APP_KEY in .env or environment}
+      APP_URL: ${APP_URL:-http://localhost}
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      DB_CONNECTION: ${DB_CONNECTION:-sqlite}
+      DB_HOST: ${DB_HOST:-}
+      DB_PORT: ${DB_PORT:-}
+      DB_DATABASE: ${DB_DATABASE:-}
+      DB_USERNAME: ${DB_USERNAME:-}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      LOG_CHANNEL: ${LOG_CHANNEL:-stderr}
+      LOG_LEVEL: ${LOG_LEVEL:-warning}
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  sealshare_storage:
+  sealshare_database:
+  caddy_data:
+  caddy_config:

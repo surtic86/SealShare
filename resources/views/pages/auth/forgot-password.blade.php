@@ -9,23 +9,22 @@
             @csrf
 
             <!-- Email Address -->
-            <flux:input
+            <x-input
                 name="email"
-                :label="__('Email Address')"
+                label="{{ __('Email Address') }}"
                 type="email"
                 required
                 autofocus
                 placeholder="email@example.com"
+                icon="o-envelope"
             />
 
-            <flux:button variant="primary" type="submit" class="w-full" data-test="email-password-reset-link-button">
-                {{ __('Email password reset link') }}
-            </flux:button>
+            <x-button type="submit" label="{{ __('Email password reset link') }}" class="btn-primary w-full" data-test="email-password-reset-link-button" />
         </form>
 
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-400">
+        <div class="space-x-1 rtl:space-x-reverse text-center text-sm opacity-60">
             <span>{{ __('Or, return to') }}</span>
-            <flux:link :href="route('login')" wire:navigate>{{ __('log in') }}</flux:link>
+            <a href="{{ route('login') }}" class="link link-primary" wire:navigate>{{ __('log in') }}</a>
         </div>
     </div>
 </x-layouts::auth>

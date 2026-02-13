@@ -8,60 +8,56 @@
         <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
             @csrf
             <!-- Name -->
-            <flux:input
+            <x-input
                 name="name"
-                :label="__('Name')"
+                label="{{ __('Name') }}"
                 :value="old('name')"
                 type="text"
                 required
                 autofocus
                 autocomplete="name"
-                :placeholder="__('Full name')"
+                placeholder="{{ __('Full name') }}"
+                icon="o-user"
             />
 
             <!-- Email Address -->
-            <flux:input
+            <x-input
                 name="email"
-                :label="__('Email address')"
+                label="{{ __('Email address') }}"
                 :value="old('email')"
                 type="email"
                 required
                 autocomplete="email"
                 placeholder="email@example.com"
+                icon="o-envelope"
             />
 
             <!-- Password -->
-            <flux:input
+            <x-password
                 name="password"
-                :label="__('Password')"
-                type="password"
+                label="{{ __('Password') }}"
                 required
                 autocomplete="new-password"
-                :placeholder="__('Password')"
-                viewable
+                placeholder="{{ __('Password') }}"
             />
 
             <!-- Confirm Password -->
-            <flux:input
+            <x-password
                 name="password_confirmation"
-                :label="__('Confirm password')"
-                type="password"
+                label="{{ __('Confirm password') }}"
                 required
                 autocomplete="new-password"
-                :placeholder="__('Confirm password')"
-                viewable
+                placeholder="{{ __('Confirm password') }}"
             />
 
             <div class="flex items-center justify-end">
-                <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
-                    {{ __('Create account') }}
-                </flux:button>
+                <x-button type="submit" label="{{ __('Create account') }}" class="btn-primary w-full" data-test="register-user-button" />
             </div>
         </form>
 
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
+        <div class="space-x-1 rtl:space-x-reverse text-center text-sm opacity-60">
             <span>{{ __('Already have an account?') }}</span>
-            <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
+            <a href="{{ route('login') }}" class="link link-primary" wire:navigate>{{ __('Log in') }}</a>
         </div>
     </div>
 </x-layouts::auth>

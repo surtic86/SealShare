@@ -1,0 +1,90 @@
+# ============================================
+# SealShare - Docker Compose Configuration
+# ============================================
+#
+# Quick start:
+#   1. Copy this file:  cp docker-compose.example.yml docker-compose.yml
+#   2. Edit the settings below (APP_URL and SERVER_NAME are required)
+#   3. Start:  docker compose up -d
+#   4. Open your browser to your configured domain
+#
+# Note: APP_KEY is auto-generated on first start if not set.
+#       Copy it from the logs into your docker-compose.yml to persist across restarts.
+#
+# ============================================
+
+services:
+  # ------------------------------------------
+  # SealShare Application (FrankenPHP/Octane)
+  # ------------------------------------------
+  app:
+    image: ghcr.io/surtic86/sealshare:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"       # HTTP
+      - "443:443"     # HTTPS (auto TLS via Let's Encrypt when SERVER_NAME is a real domain)
+      - "443:443/udp" # HTTP/3 (QUIC)
+    volumes:
+      - sealshare_storage:/app/storage/app   # Uploaded & encrypted files
+      - sealshare_database:/app/database      # SQLite database
+      - caddy_data:/data                      # TLS certificates
+      - caddy_config:/config                  # Caddy configuration
+    environment:
+      # --- REQUIRED ---
+      APP_URL:              # Your full URL, e.g. https://share.example.com
+      SERVER_NAME:          # Your domain for auto-TLS, e.g. share.example.com (use "localhost" for local testing)
+      # APP_KEY:            # Auto-generated if not set. Copy from logs to persist across restarts.
+
+      # --- Optional: Application ---
+      # APP_ENV: production
+      # APP_DEBUG: "false"
+      # LOG_CHANNEL: stderr
+      # LOG_LEVEL: warning
+
+      # --- Optional: Database ---
+      # DB_CONNECTION: sqlite           # Options: sqlite, mysql, pgsql
+      # DB_HOST:                        # Required for mysql/pgsql
+      # DB_PORT:                        # Required for mysql/pgsql
+      # DB_DATABASE:                    # Required for mysql/pgsql
+      # DB_USERNAME:                    # Required for mysql/pgsql
+      # DB_PASSWORD:                    # Required for mysql/pgsql
+
+      # --- Optional: Octane ---
+      # OCTANE_HTTPS: "false"           # Set to "true" when using HTTPS
+      # OCTANE_MAX_EXECUTION_TIME: 300  # Max request execution time (seconds)
+
+      # --- Optional: PHP upload limits ---
+      # PHP_UPLOAD_MAX_FILESIZE: "4G"   # Max single file size
+      # PHP_POST_MAX_SIZE: "4G"         # Max total request size
+      # PHP_MAX_EXECUTION_TIME: "300"   # Upload timeout in seconds
+      # PHP_MAX_INPUT_TIME: "300"       # Input processing timeout
+      # PHP_MEMORY_LIMIT: "512M"        # PHP memory limit
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost/up"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+  # ------------------------------------------
+  # Scheduler - Runs cleanup for expired shares
+  # ------------------------------------------
+  scheduler:
+    image: ghcr.io/surtic86/sealshare:latest
+    restart: unless-stopped
+    entrypoint: ["php", "artisan", "schedule:work"]
+    volumes:
+      - sealshare_storage:/app/storage/app
+      - sealshare_database:/app/database
+    environment:
+      # APP_KEY:            # Same key as the app service above (auto-generated if not set)
+      APP_URL:              # Same URL as the app service above
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  sealshare_storage:    # Persistent: uploaded & encrypted files
+  sealshare_database:   # Persistent: SQLite database
+  caddy_data:           # Persistent: TLS certificates
+  caddy_config:         # Persistent: Caddy configuration

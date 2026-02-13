@@ -1,0 +1,14 @@
+{
+    frankenphp
+    order php_server before file_server
+    admin off
+}
+
+{$SERVER_NAME:localhost} {
+    root * /app/public
+    encode zstd gzip
+    request_body {
+        max_size 4gb
+    }
+    php_server
+}

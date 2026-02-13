@@ -144,7 +144,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Features::registration(), // Disabled - admin created via setup wizard
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([

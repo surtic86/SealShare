@@ -13,6 +13,10 @@
 
 pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->beforeEach(function () {
+        // EnsureSetupComplete middleware redirects to /setup unless an admin exists.
+        \App\Models\User::factory()->admin()->create(['email' => 'admin-setup@test.com']);
+    })
     ->in('Feature');
 
 /*

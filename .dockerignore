@@ -1,0 +1,57 @@
+# Version control
+.git
+.gitattributes
+
+# Dependencies (built in Docker)
+node_modules
+vendor
+
+# Environment files
+.env
+.env.*.local
+
+# Development & IDE
+.idea
+.vscode
+.phpunit.result.cache
+.php-cs-fixer.cache
+
+# Docker files (avoid recursive copy)
+docker-compose*.yml
+Dockerfile
+
+# CI/CD
+.github
+
+# Testing
+tests
+phpunit.xml
+.phpunit.cache
+
+# Documentation
+*.md
+LICENSE
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+public/build
+public/hot
+
+# Logs & framework cache (recreated at runtime)
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+storage/pail/*
+!storage/logs/.gitkeep
+!storage/framework/cache/.gitkeep
+!storage/framework/sessions/.gitkeep
+!storage/framework/testing/.gitkeep
+!storage/framework/views/.gitkeep
+
+# Database (created at runtime)
+database/database.sqlite

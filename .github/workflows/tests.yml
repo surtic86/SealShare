@@ -20,7 +20,7 @@ jobs:
     environment: Testing
     strategy:
       matrix:
-        php-version: ['8.4', '8.5']
+        php-version: ['8.5']
 
     steps:
       - name: Checkout code
@@ -30,13 +30,14 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
+          extensions: pcntl
           tools: composer:v2
           coverage: xdebug
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
 
       - name: Install Node Dependencies
         run: npm i

@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/dev.Dockerfile
+    ports:
+      - "8000:8000"
+      - "5173:5173"
+    volumes:
+      - .:/app
+    environment:
+      APP_KEY: ${APP_KEY:-}
+      APP_URL: http://localhost:8000
+      APP_ENV: local
+      APP_DEBUG: "true"
+      SERVER_NAME: ":8000"
+      DB_CONNECTION: sqlite
+      LOG_CHANNEL: stack
+      LOG_LEVEL: debug
+      OCTANE_MAX_EXECUTION_TIME: "300"
+      PHP_UPLOAD_MAX_FILESIZE: "4G"
+      PHP_POST_MAX_SIZE: "4G"
+      PHP_MAX_EXECUTION_TIME: "300"
+      PHP_MAX_INPUT_TIME: "300"
+      PHP_MEMORY_LIMIT: "512M"
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:8000/up"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
