@@ -45,7 +45,8 @@ LABEL org.opencontainers.image.description="Self-hosted encrypted file sharing"
 # Install required PHP extensions
 RUN install-php-extensions \
     intl \
-    pcntl
+    pcntl \
+    zip
 
 # Laravel environment defaults
 ENV APP_NAME="SealShare" \
@@ -80,8 +81,9 @@ COPY --from=vendor /app/vendor ./vendor
 # Copy built frontend assets from node stage
 COPY --from=assets /app/public/build ./public/build
 
-# Remove dev/build files not needed in production
+# Remove dev/build files and stale cache not needed in production
 RUN rm -rf node_modules tests .github docker/dev.Dockerfile docker/dev-entrypoint.sh .env .env.example \
+    bootstrap/cache/*.php \
     && mkdir -p storage/app/shares storage/app/public storage/framework/cache \
     storage/framework/sessions storage/framework/testing storage/framework/views \
     storage/logs database \
