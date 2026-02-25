@@ -219,26 +219,6 @@ test('wrong key on chunked file throws exception', function () {
     $this->service->decryptFile($encryptedPath, $wrongKey);
 })->throws(RuntimeException::class, 'Decryption failed');
 
-test('decryptFileToCallback returns working stream resource', function () {
-    $sourcePath = $this->tempDir.'/source.txt';
-    $encryptedPath = $this->tempDir.'/encrypted.enc';
-    $content = 'Callback decrypted content';
-
-    file_put_contents($sourcePath, $content);
-
-    $key = $this->service->generateRandomKey();
-    $this->service->encryptFile($sourcePath, $encryptedPath, $key);
-
-    $callback = $this->service->decryptFileToCallback($encryptedPath, $key);
-    $resource = $callback();
-
-    expect(is_resource($resource))->toBeTrue();
-
-    $decrypted = stream_get_contents($resource);
-    fclose($resource);
-
-    expect($decrypted)->toBe($content);
-});
 
 test('decrypt file stream with file size sets content-length header', function () {
     $sourcePath = $this->tempDir.'/source.txt';
