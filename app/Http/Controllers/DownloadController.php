@@ -7,8 +7,9 @@ use App\Models\ShareFile;
 use App\Services\FileEncryptionService;
 use App\Services\ShareService;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use ZipStream\ZipStream;
+use ZipArchive;
 
 class DownloadController extends Controller
 {
@@ -20,40 +21,39 @@ class DownloadController extends Controller
     /**
      * Download all files as a ZIP archive.
      */
-    public function download(Share $share): StreamedResponse
+    public function download(Share $share): BinaryFileResponse
     {
         abort_if($share->isExpired() || $share->hasReachedDownloadLimit(), 404);
 
         $share->load('files');
         $key = $this->resolveDecryptionKey($share);
 
-        $this->shareService->recordDownload($share);
+        $tempPath = tempnam(sys_get_temp_dir(), 'sealshare_');
 
-        return new StreamedResponse(function () use ($share, $key): void {
-            $zip = new ZipStream(
-                outputName: 'share-'.$share->token.'.zip',
-                sendHttpHeaders: false,
-            );
+        $zip = new ZipArchive;
+        $zip->open($tempPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
 
-            foreach ($share->files as $file) {
-                $encryptedPath = Storage::disk('shares')->path($share->token.'/'.basename($file->stored_path));
-                $callback = $this->encryptionService->decryptFileToCallback($encryptedPath, $key);
+        foreach ($share->files as $file) {
+            $encryptedPath = Storage::disk('shares')->path($share->token.'/'.basename($file->stored_path));
+            $content = $this->encryptionService->decryptFile($encryptedPath, $key);
 
-                $filename = $file->relative_path ?: $file->original_name;
-                $filename = str_replace('\\', '/', $filename);
+            $filename = $file->relative_path ?: $file->original_name;
+            $filename = str_replace('\\', '/', $filename);
 
-                if (str_starts_with($filename, '/') || str_contains($filename, '..')) {
-                    $filename = basename($filename);
-                }
-
-                $zip->addFileFromCallback(fileName: $filename, callback: $callback, exactSize: $file->file_size);
+            if (str_starts_with($filename, '/') || str_contains($filename, '..')) {
+                $filename = basename($filename);
             }
 
-            $zip->finish();
-        }, 200, [
+            $zip->addFromString($filename, $content);
+        }
+
+        $zip->close();
+
+        $this->shareService->recordDownload($share);
+
+        return response()->download($tempPath, 'share-'.$share->token.'.zip', [
             'Content-Type' => 'application/zip',
-            'Content-Disposition' => 'attachment; filename="share-'.$share->token.'.zip"',
-        ]);
+        ])->deleteFileAfterSend(true);
     }
 
     /**
@@ -66,17 +66,27 @@ class DownloadController extends Controller
 
         $key = $this->resolveDecryptionKey($share);
 
-        $this->shareService->recordDownload($share);
-
         $encryptedPath = Storage::disk('shares')->path($share->token.'/'.basename($shareFile->stored_path));
+        $mimeType = $shareFile->mime_type ?? 'application/octet-stream';
 
-        return $this->encryptionService->decryptFileStream(
-            $encryptedPath,
-            $key,
-            $shareFile->original_name,
-            $shareFile->mime_type ?? 'application/octet-stream',
-            $shareFile->file_size,
-        );
+        $headers = [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => \Symfony\Component\HttpFoundation\HeaderUtils::makeDisposition(
+                'attachment',
+                $shareFile->original_name,
+                'download',
+            ),
+        ];
+
+        if ($shareFile->file_size !== null) {
+            $headers['Content-Length'] = $shareFile->file_size;
+        }
+
+        return new StreamedResponse(function () use ($encryptedPath, $key, $share): void {
+            $this->encryptionService->streamDecryptedFile($encryptedPath, $key);
+
+            $this->shareService->recordDownload($share);
+        }, 200, $headers);
     }
 
     /**

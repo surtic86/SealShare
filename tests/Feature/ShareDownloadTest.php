@@ -86,6 +86,7 @@ test('download counter increments on zip download', function () {
 
     $encryptionService = app(FileEncryptionService::class);
     $key = $share->encryption_key;
+    $content = 'test content';
 
     foreach ($share->files as $file) {
         $dir = Storage::disk('shares')->path($share->token);
@@ -94,15 +95,87 @@ test('download counter increments on zip download', function () {
         }
         $encryptedPath = $dir.'/'.basename($file->stored_path);
         $tempSource = tempnam(sys_get_temp_dir(), 'test');
-        file_put_contents($tempSource, 'test content');
+        file_put_contents($tempSource, $content);
         $encryptionService->encryptFile($tempSource, $encryptedPath, $key);
         unlink($tempSource);
+        $file->update(['file_size' => strlen($content)]);
     }
 
-    $this->withSession(['share_password_'.$share->token => null])
+    $response = $this->withSession(['share_password_'.$share->token => null])
         ->get(route('share.download.all', $share));
 
+    $response->assertDownload();
+
     expect($share->fresh()->download_count)->toBe(1);
+});
+
+test('zip download produces a valid archive', function () {
+    Storage::fake('shares');
+
+    $share = createShareWithFile();
+    $share->load('files');
+
+    $encryptionService = app(FileEncryptionService::class);
+    $key = $share->encryption_key;
+    $content = 'hello zip content';
+
+    foreach ($share->files as $file) {
+        $dir = Storage::disk('shares')->path($share->token);
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        $encryptedPath = $dir.'/'.basename($file->stored_path);
+        $tempSource = tempnam(sys_get_temp_dir(), 'test');
+        file_put_contents($tempSource, $content);
+        $encryptionService->encryptFile($tempSource, $encryptedPath, $key);
+        unlink($tempSource);
+        $file->update(['file_size' => strlen($content)]);
+    }
+
+    $response = $this->get(route('share.download.all', $share));
+    $response->assertDownload();
+
+    $zipPath = $response->getFile()->getPathname();
+
+    $zip = new \ZipArchive;
+    $result = $zip->open($zipPath);
+
+    expect($result)->toBe(true);
+    expect($zip->numFiles)->toBe(1);
+    expect($zip->statIndex(0)['size'])->toBe(strlen($content));
+
+    $zip->close();
+});
+
+test('last download streams successfully before auto-delete', function () {
+    Storage::fake('shares');
+
+    $share = createShareWithFile();
+    $share->update(['max_downloads' => 1]);
+    $share->load('files');
+
+    $encryptionService = app(FileEncryptionService::class);
+    $key = $share->encryption_key;
+    $content = 'last download content';
+
+    foreach ($share->files as $file) {
+        $dir = Storage::disk('shares')->path($share->token);
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        $encryptedPath = $dir.'/'.basename($file->stored_path);
+        $tempSource = tempnam(sys_get_temp_dir(), 'test');
+        file_put_contents($tempSource, $content);
+        $encryptionService->encryptFile($tempSource, $encryptedPath, $key);
+        unlink($tempSource);
+        $file->update(['file_size' => strlen($content)]);
+    }
+
+    $response = $this->get(route('share.download.all', $share));
+    $response->assertDownload();
+
+    // Share was deleted after download
+    expect(Share::query()->find($share->id))->toBeNull();
 });
 
 test('share auto-deletes after reaching download limit', function () {

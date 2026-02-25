@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Closure;
 use Generator;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\HeaderUtils;
@@ -181,30 +180,21 @@ class FileEncryptionService
     }
 
     /**
-     * Return a closure that decrypts a file into a temporary stream resource.
-     * Suitable for ZipStream's addFileFromCallback.
+     * Stream decrypted file content directly to output (echo).
+     * Use this when you need to add post-streaming logic inside a StreamedResponse callback.
      */
-    public function decryptFileToCallback(string $encryptedPath, string $key): Closure
+    public function streamDecryptedFile(string $encryptedPath, string $key): void
     {
-        return function () use ($encryptedPath, $key) {
-            $tmp = tmpfile();
-
-            if ($tmp === false) {
-                throw new RuntimeException('Cannot create temporary file');
+        if ($this->isChunkedFormat($encryptedPath)) {
+            foreach ($this->decryptChunks($encryptedPath, $key) as $chunk) {
+                echo $chunk;
+                flush();
             }
 
-            if ($this->isChunkedFormat($encryptedPath)) {
-                foreach ($this->decryptChunks($encryptedPath, $key) as $chunk) {
-                    fwrite($tmp, $chunk);
-                }
-            } else {
-                fwrite($tmp, $this->decryptLegacy($encryptedPath, $key));
-            }
+            return;
+        }
 
-            rewind($tmp);
-
-            return $tmp;
-        };
+        echo $this->decryptLegacy($encryptedPath, $key);
     }
 
     /**
