@@ -13,8 +13,8 @@
 
     @if (! $authenticated)
         {{-- Password form --}}
-        <x-card title="{{ __('Password Required') }}" subtitle="{{ __('Enter the password to access these files') }}" shadow>
-            <form wire:submit="verifyPassword" class="space-y-4">
+        <form wire:submit="verifyPassword">
+            <x-card title="{{ __('Password Required') }}" subtitle="{{ __('Enter the password to access these files') }}" shadow>
                 <x-password
                     wire:model="password"
                     label="{{ __('Password') }}"
@@ -23,10 +23,10 @@
                 />
 
                 <x-slot:actions>
-                    <x-button type="submit" label="{{ __('Unlock') }}" class="btn-primary" icon="o-lock-open" spinner="verifyPassword" />
+                    <x-button type="submit" label="{{ __('Unlock') }}" class="btn-primary w-full mt-4" icon="o-lock-open" spinner="verifyPassword" />
                 </x-slot:actions>
-            </form>
-        </x-card>
+            </x-card>
+        </form>
     @else
         {{-- File list --}}
         <x-card title="{{ __('Shared Files') }}" shadow>
@@ -53,12 +53,12 @@
 
             <x-slot:actions>
                 @if ($share->files->count() > 1)
-                    <a href="{{ route('share.download.all', $share) }}" class="btn btn-primary">
+                    <a href="{{ route('share.download.all', $share) }}" class="btn btn-primary w-full">
                         <x-icon name="o-arrow-down-tray" class="w-4 h-4" />
                         {{ __('Download All as ZIP') }}
                     </a>
                 @else
-                    <a href="{{ route('share.download.file', [$share, $share->files->first()]) }}" class="btn btn-primary">
+                    <a href="{{ route('share.download.file', [$share, $share->files->first()]) }}" class="btn btn-primary w-full">
                         <x-icon name="o-arrow-down-tray" class="w-4 h-4" />
                         {{ __('Download') }}
                     </a>
