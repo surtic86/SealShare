@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Admin\AdminDashboard;
 use App\Models\Share;
 use App\Models\ShareFile;
 use App\Models\User;
@@ -52,7 +53,7 @@ test('admin can delete share', function () {
     $shareId = $share->id;
 
     Livewire::actingAs($admin)
-        ->test(\App\Livewire\Admin\AdminDashboard::class)
+        ->test(AdminDashboard::class)
         ->call('deleteShare', $shareId);
 
     expect(Share::query()->find($shareId))->toBeNull();

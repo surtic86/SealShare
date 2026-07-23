@@ -4,11 +4,14 @@ use App\Models\Setting;
 use App\Models\Share;
 use App\Models\ShareFile;
 use App\Services\ShareService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
 
-pest()->extend(Tests\TestCase::class)
-    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class);
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('shares');
@@ -42,7 +45,7 @@ test('create share with password does not store encryption key', function () {
 
     expect($share->password)->not->toBeNull();
     expect($share->encryption_key)->toBeNull();
-    expect(\Illuminate\Support\Facades\Hash::check('my-password', $share->password))->toBeTrue();
+    expect(Hash::check('my-password', $share->password))->toBeTrue();
 });
 
 test('create share with options sets expiration and max downloads', function () {

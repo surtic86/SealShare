@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\SetupWizard;
 use App\Models\User;
 use Livewire\Livewire;
 
@@ -12,14 +13,14 @@ test('setup wizard renders when no admin exists', function () {
 });
 
 test('setup wizard redirects to upload when admin already exists', function () {
-    Livewire::test(\App\Livewire\SetupWizard::class)
+    Livewire::test(SetupWizard::class)
         ->assertRedirect(route('upload'));
 });
 
 test('setup wizard creates admin user', function () {
     User::query()->where('is_admin', true)->delete();
 
-    Livewire::test(\App\Livewire\SetupWizard::class)
+    Livewire::test(SetupWizard::class)
         ->set('name', 'Admin User')
         ->set('email', 'admin@example.com')
         ->set('password', 'password123')
@@ -40,7 +41,7 @@ test('setup wizard creates admin user', function () {
 test('setup wizard validates required fields', function () {
     User::query()->where('is_admin', true)->delete();
 
-    Livewire::test(\App\Livewire\SetupWizard::class)
+    Livewire::test(SetupWizard::class)
         ->set('name', '')
         ->set('email', '')
         ->set('password', '')

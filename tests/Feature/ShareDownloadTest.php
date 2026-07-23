@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\ShareDownload;
 use App\Models\Share;
 use App\Services\FileEncryptionService;
 use App\Services\ShareService;
@@ -49,7 +50,7 @@ test('password verification works for protected share', function () {
 
     $share = createShareWithFile('my-password');
 
-    Livewire::test(\App\Livewire\ShareDownload::class, ['share' => $share])
+    Livewire::test(ShareDownload::class, ['share' => $share])
         ->assertSet('authenticated', false)
         ->set('password', 'my-password')
         ->call('verifyPassword')
@@ -62,7 +63,7 @@ test('wrong password is rejected', function () {
 
     $share = createShareWithFile('my-password');
 
-    Livewire::test(\App\Livewire\ShareDownload::class, ['share' => $share])
+    Livewire::test(ShareDownload::class, ['share' => $share])
         ->set('password', 'wrong-password')
         ->call('verifyPassword')
         ->assertSet('authenticated', false)
@@ -74,7 +75,7 @@ test('non-password share shows files directly', function () {
 
     $share = createShareWithFile();
 
-    Livewire::test(\App\Livewire\ShareDownload::class, ['share' => $share])
+    Livewire::test(ShareDownload::class, ['share' => $share])
         ->assertSet('authenticated', true);
 });
 
@@ -137,7 +138,7 @@ test('zip download produces a valid archive', function () {
 
     $zipPath = $response->getFile()->getPathname();
 
-    $zip = new \ZipArchive;
+    $zip = new ZipArchive;
     $result = $zip->open($zipPath);
 
     expect($result)->toBe(true);

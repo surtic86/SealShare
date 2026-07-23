@@ -7,6 +7,7 @@ use App\Services\ShareService;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
@@ -14,7 +15,7 @@ class FileUploader extends Component
 {
     use WithFileUploads;
 
-    /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
+    /** @var array<int, TemporaryUploadedFile> */
     public array $files = [];
 
     /** @var array<int, string|null> */

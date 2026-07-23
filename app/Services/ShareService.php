@@ -114,7 +114,7 @@ class ShareService
     {
         if ($share->isPasswordProtected()) {
             if (! $password) {
-                throw new \RuntimeException('Password required for this share');
+                throw new RuntimeException('Password required for this share');
             }
 
             return bin2hex($this->encryptionService->deriveKey($password, $share->encryption_salt));

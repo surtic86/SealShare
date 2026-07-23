@@ -1,7 +1,9 @@
 <?php
 
+use App\Livewire\Admin\AdminSettings;
 use App\Models\Setting;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 
 test('admin settings requires authentication', function () {
@@ -29,10 +31,10 @@ test('admin can access settings page', function () {
 test('admin can save settings', function () {
     $admin = User::query()->where('is_admin', true)->first();
 
-    $phpMaxMb = \App\Livewire\Admin\AdminSettings::phpMaxUploadMb();
+    $phpMaxMb = AdminSettings::phpMaxUploadMb();
 
     Livewire::actingAs($admin)
-        ->test(\App\Livewire\Admin\AdminSettings::class)
+        ->test(AdminSettings::class)
         ->set('maxFileSize', min(200, $phpMaxMb))
         ->set('maxStorageQuota', 50)
         ->set('maxFilesPerShare', 100)
@@ -50,10 +52,10 @@ test('admin can save settings', function () {
 
 test('admin can set system password', function () {
     $admin = User::query()->where('is_admin', true)->first();
-    $phpMaxMb = \App\Livewire\Admin\AdminSettings::phpMaxUploadMb();
+    $phpMaxMb = AdminSettings::phpMaxUploadMb();
 
     Livewire::actingAs($admin)
-        ->test(\App\Livewire\Admin\AdminSettings::class)
+        ->test(AdminSettings::class)
         ->set('maxFileSize', $phpMaxMb)
         ->set('systemPassword', 'new-system-password')
         ->call('saveSettings')
@@ -61,7 +63,7 @@ test('admin can set system password', function () {
 
     $storedPassword = Setting::get('system_password');
     expect($storedPassword)->not->toBeNull();
-    expect(\Illuminate\Support\Facades\Hash::check('new-system-password', $storedPassword))->toBeTrue();
+    expect(Hash::check('new-system-password', $storedPassword))->toBeTrue();
 });
 
 test('admin can clear system password', function () {
@@ -70,7 +72,7 @@ test('admin can clear system password', function () {
     Setting::set('system_password', bcrypt('existing-password'));
 
     Livewire::actingAs($admin)
-        ->test(\App\Livewire\Admin\AdminSettings::class)
+        ->test(AdminSettings::class)
         ->call('clearSystemPassword')
         ->assertHasNoErrors();
 
@@ -79,14 +81,14 @@ test('admin can clear system password', function () {
 
 test('settings page loads existing values', function () {
     $admin = User::query()->where('is_admin', true)->first();
-    $phpMaxMb = \App\Livewire\Admin\AdminSettings::phpMaxUploadMb();
+    $phpMaxMb = AdminSettings::phpMaxUploadMb();
     $testSize = min(40, $phpMaxMb);
 
     Setting::set('max_file_size', $testSize * 1024 * 1024);
     Setting::set('max_files_per_share', 75);
 
     Livewire::actingAs($admin)
-        ->test(\App\Livewire\Admin\AdminSettings::class)
+        ->test(AdminSettings::class)
         ->assertSet('maxFileSize', $testSize)
         ->assertSet('maxFilesPerShare', 75);
 });
@@ -95,7 +97,7 @@ test('settings validation rejects invalid values', function () {
     $admin = User::query()->where('is_admin', true)->first();
 
     Livewire::actingAs($admin)
-        ->test(\App\Livewire\Admin\AdminSettings::class)
+        ->test(AdminSettings::class)
         ->set('maxFileSize', 0)
         ->set('maxStorageQuota', 0)
         ->call('saveSettings')

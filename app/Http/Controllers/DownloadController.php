@@ -8,6 +8,7 @@ use App\Services\FileEncryptionService;
 use App\Services\ShareService;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use ZipArchive;
 
@@ -71,7 +72,7 @@ class DownloadController extends Controller
 
         $headers = [
             'Content-Type' => $mimeType,
-            'Content-Disposition' => \Symfony\Component\HttpFoundation\HeaderUtils::makeDisposition(
+            'Content-Disposition' => HeaderUtils::makeDisposition(
                 'attachment',
                 $shareFile->original_name,
                 'download',

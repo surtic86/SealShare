@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Admin\AdminSettings;
 use App\Livewire\FileUploader;
 use App\Livewire\ShareDownload;
 use App\Models\Share;
@@ -193,10 +194,10 @@ test('content disposition handles special characters in filename', function () {
 test('svg upload is rejected for site logo', function () {
     $admin = User::query()->where('is_admin', true)->first();
 
-    $phpMaxMb = \App\Livewire\Admin\AdminSettings::phpMaxUploadMb();
+    $phpMaxMb = AdminSettings::phpMaxUploadMb();
 
     Livewire::actingAs($admin)
-        ->test(\App\Livewire\Admin\AdminSettings::class)
+        ->test(AdminSettings::class)
         ->set('maxFileSize', $phpMaxMb)
         ->set('siteLogo', UploadedFile::fake()->create('logo.svg', 100, 'image/svg+xml'))
         ->call('saveSettings')

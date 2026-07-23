@@ -1,6 +1,7 @@
 <?php
 
 use App\Services\FileEncryptionService;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 beforeEach(function () {
     $this->service = new FileEncryptionService;
@@ -119,7 +120,7 @@ test('decrypt file stream returns streamed response', function () {
 
     $response = $this->service->decryptFileStream($encryptedPath, $key, 'test.txt', 'text/plain');
 
-    expect($response)->toBeInstanceOf(Symfony\Component\HttpFoundation\StreamedResponse::class);
+    expect($response)->toBeInstanceOf(StreamedResponse::class);
     expect($response->headers->get('Content-Type'))->toBe('text/plain');
     expect($response->headers->get('Content-Disposition'))->toContain('test.txt');
 });
@@ -218,7 +219,6 @@ test('wrong key on chunked file throws exception', function () {
 
     $this->service->decryptFile($encryptedPath, $wrongKey);
 })->throws(RuntimeException::class, 'Decryption failed');
-
 
 test('decrypt file stream with file size sets content-length header', function () {
     $sourcePath = $this->tempDir.'/source.txt';
