@@ -25,12 +25,12 @@ A simple, self-hosted file sharing solution built with Laravel. Upload files, ge
 
 | Layer | Technology |
 |-------|-----------|
-| **Framework** | Laravel 12 |
+| **Framework** | Laravel 13 |
 | **Application Server** | FrankenPHP (via Laravel Octane) |
 | **Frontend** | Livewire 4, Alpine.js, Tailwind CSS 4, DaisyUI 5, Mary UI |
 | **Authentication** | Laravel Fortify |
 | **Encryption** | Chunked AES-256-GCM with PBKDF2-SHA256 key derivation |
-| **ZIP Streaming** | maennchen/zipstream-php |
+| **ZIP Downloads** | Native PHP ZipArchive |
 | **Testing** | Pest 4 |
 | **Code Style** | Laravel Pint |
 | **Build Tool** | Vite |
