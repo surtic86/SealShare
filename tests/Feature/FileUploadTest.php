@@ -94,6 +94,31 @@ test('file upload with max downloads sets limit', function () {
     expect($share->max_downloads)->toBe(5);
 });
 
+test('every upload batch dispatches files-processed to clear the uploading state', function () {
+    Storage::fake('shares');
+
+    Livewire::test(FileUploader::class)
+        ->set('files', [UploadedFile::fake()->create('first.txt', 64)])
+        ->assertDispatched('files-processed')
+        ->set('files', [UploadedFile::fake()->create('second.txt', 64)])
+        ->assertDispatched('files-processed');
+});
+
+test('files added in multiple batches end up in the same share', function () {
+    Storage::fake('shares');
+
+    Livewire::test(FileUploader::class)
+        ->set('files', [UploadedFile::fake()->create('first.txt', 64)])
+        ->set('files', [UploadedFile::fake()->create('second.txt', 64)])
+        ->call('createShare')
+        ->assertHasNoErrors()
+        ->assertRedirectContains('/share/');
+
+    $share = Share::query()->first();
+
+    expect($share->files->pluck('original_name')->all())->toBe(['first.txt', 'second.txt']);
+});
+
 test('file upload requires at least one file', function () {
     Livewire::test(FileUploader::class)
         ->set('files', [])

@@ -38,15 +38,35 @@
                     }
 
                     setTimeout(() => {
+                        if (! files.length) {
+                            return;
+                        }
+
                         const dt = new DataTransfer();
                         const paths = [];
                         files.forEach(f => {
                             dt.items.add(f.file);
                             paths.push(f.path);
                         });
-                        $wire.relativePaths = paths;
-                        $wire.uploadMultiple('files', dt.files);
+
+                        $wire.relativePaths = [...($wire.relativePaths ?? []), ...paths];
+
+                        this.uploading = true;
+                        this.progress = 0;
+
+                        $wire.uploadMultiple(
+                            'files',
+                            dt.files,
+                            () => this.progress = 100,
+                            () => this.resetUpload(),
+                            (event) => this.progress = event.detail.progress,
+                            () => this.resetUpload(),
+                        );
                     }, 500);
+                },
+                resetUpload() {
+                    this.uploading = false;
+                    this.progress = 0;
                 },
                 traverseEntry(entry, path, files) {
                     if (entry.isFile) {
@@ -61,10 +81,11 @@
                     }
                 }
             }"
+            x-init="$wire.$on('files-processed', () => resetUpload())"
             x-on:livewire-upload-start="uploading = true; progress = 0"
             x-on:livewire-upload-finish="progress = 100"
-            x-on:livewire-upload-cancel="uploading = false"
-            x-on:livewire-upload-error="uploading = false"
+            x-on:livewire-upload-cancel="resetUpload()"
+            x-on:livewire-upload-error="resetUpload()"
             x-on:livewire-upload-progress="progress = $event.detail.progress"
         >
             {{-- Drop Zone --}}
@@ -118,12 +139,12 @@
 
             {{-- Errors --}}
             @error('files')
-                <div x-init="uploading = false" class="alert alert-error mb-4">{{ $message }}</div>
+                <div class="alert alert-error mb-4">{{ $message }}</div>
             @enderror
 
             {{-- File List --}}
             @if (count($files))
-                <div x-init="uploading = false" class="mb-6">
+                <div class="mb-6">
                     <h3 class="font-semibold mb-2">{{ __('Selected Files') }} ({{ count($files) }})</h3>
                     <div class="space-y-1 max-h-60 overflow-y-auto">
                         @foreach ($files as $index => $file)

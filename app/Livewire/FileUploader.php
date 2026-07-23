@@ -65,8 +65,17 @@ class FileUploader extends Component
         ]);
     }
 
+    /**
+     * Validate a freshly uploaded batch of files.
+     *
+     * Dispatches `files-processed` so the front end can drop its "uploading" state.
+     * This runs for every batch, including additional files added to an existing
+     * selection, which a one-off `x-init` on the file list cannot cover.
+     */
     public function updatedFiles(): void
     {
+        $this->dispatch('files-processed')->self();
+
         $maxFileSize = (int) Setting::get('max_file_size', 100 * 1024 * 1024);
         $maxFileSizeMb = $maxFileSize / (1024 * 1024);
         $maxFilesPerShare = (int) Setting::get('max_files_per_share', 50);
